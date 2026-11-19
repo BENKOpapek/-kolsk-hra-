@@ -31,7 +31,7 @@ const fail = (m) => { console.error('SMOKE FAIL:', m); process.exitCode = 1; };
     await page.waitForFunction(() => window.game.scene.isActive('Corridor'), null, { timeout: 5000 });
     const corridor = (fn, arg) => page.evaluate(([f, a]) => new Function('s', 'a', 'return ' + f)(window.game.scene.getScene('Corridor'), a), [fn, arg]);
     const tapTile = async (x, y) => {
-      const p = await corridor('(() => { const c = s.cameras.main, z = s.game.scale.zoom; return { x: (a.x*16+8 - c.worldView.x)*z, y: (a.y*16+8 - c.worldView.y)*z }; })()', { x, y });
+      const p = await corridor('(() => { const c = s.cameras.main, z = c.zoom / devicePixelRatio; return { x: (a.x*16+8 - c.worldView.x)*z, y: (a.y*16+8 - c.worldView.y)*z }; })()', { x, y });
       const b = await page.locator('canvas').boundingBox();
       await page.touchscreen.tap(b.x + p.x, b.y + p.y);
     };
@@ -54,7 +54,10 @@ const fail = (m) => { console.error('SMOKE FAIL:', m); process.exitCode = 1; };
 
     await page.setViewportSize({ width: 360, height: 640 });
     await page.waitForTimeout(300);
-    if (await page.evaluate(() => window.game.scale.zoom) !== 2) fail('zoom po resize nie je 2');
+    const z = await page.evaluate(() => window.game.scene.getScene('Corridor').cameras.main.zoom);
+    if (z !== 6) fail('zoom kamery po resize na 360x640 @3x nie je 6: ' + z);
+    const cw = await page.evaluate(() => window.game.canvas.width);
+    if (cw !== 1080) fail('canvas po resize nemá 1080 px: ' + cw);
 
     if (errors.length) fail('console errors: ' + errors.join(' | '));
     if (!process.exitCode) console.log('SMOKE OK');

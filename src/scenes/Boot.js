@@ -1,20 +1,25 @@
-// Etapa 1: dočasné textúry ako farebné štvorce (Etapa 2 ich nahradí PNG pod rovnakými kľúčmi).
-const COLORS = {
-  floor: 0xe8d9b5, wall: 0x6b4a3a, void: 0x1b1b2a, door: 0x4f8a4b,
-  locker: 0x3e6fa8, vitrina: 0x4fb3b0, portret: 0xd4a73c,
-};
+// Načíta grafiku a pripraví animácie postáv.
+export const TILE = { floor: 0, floor2: 1, wallTop: 2, wallFace: 3, door: 4, locker: 5, vitrina: 6, portret: 7, void: 8, roof: 9 };
+const DIRS = ['down', 'up', 'left', 'right']; // poradie riadkov v spritesheete postavy
 
 export class Boot extends Phaser.Scene {
   constructor() { super('Boot'); }
+
+  preload() {
+    const sheet = { frameWidth: 16, frameHeight: 16 };
+    this.load.spritesheet('tiles', 'assets/tiles.png', sheet);
+    this.load.spritesheet('player_boy', 'assets/player_boy.png', sheet);
+    this.load.spritesheet('player_girl', 'assets/player_girl.png', sheet);
+  }
+
   create() {
-    const g = this.add.graphics();
-    for (const [key, color] of Object.entries(COLORS)) {
-      g.clear().fillStyle(color).fillRect(0, 0, 16, 16).lineStyle(1, 0x000000, 0.15).strokeRect(0.5, 0.5, 15, 15);
-      g.generateTexture(key, 16, 16);
+    for (const key of ['player_boy', 'player_girl']) {
+      DIRS.forEach((dir, row) => {
+        const f = (c) => ({ key, frame: row * 3 + c });
+        this.anims.create({ key: `${key}-walk-${dir}`, frames: [f(1), f(0), f(2), f(0)], frameRate: 10, repeat: -1 });
+        this.anims.create({ key: `${key}-idle-${dir}`, frames: [f(0)] });
+      });
     }
-    g.clear().fillStyle(0xc8463c).fillRect(2, 1, 12, 14).fillStyle(0xf2c9a0).fillRect(4, 2, 8, 5);
-    g.generateTexture('player', 16, 16);
-    g.destroy();
     this.scene.start('Corridor');
   }
 }

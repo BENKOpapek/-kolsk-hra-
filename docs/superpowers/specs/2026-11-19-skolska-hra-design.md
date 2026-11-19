@@ -1,6 +1,6 @@
 # Školská hra – návrh (design)
 
-Dátum: 2026-11-19 · Stav: návrh na schválenie
+Dátum: 2026-11-19 · Stav: schválené autorom · Názov hry: **Prvý deň** · Bez termínu
 
 ## Prečo a pre koho
 
@@ -11,7 +11,7 @@ Hra pre študentov **Gymnázia J. C. Hronského vo Vrútkach**. Žiaci ju otvori
 - Pixel-art hra zhora, štvorčekový štýl à la „farm life“.
 - Jedno prejdenie trvá **zhruba 15 minút**.
 - Odohráva sa na **jednej chodbe gymnázia**. Budova je spojená so ZŠ, ale v hre je len chodba gymnázia.
-- **Príbeh:** hráč je nový žiak a plní úlohy od triednej. Popri tom rieši malú záhadu so stratenou knihou.
+- **Príbeh:** hráč je nový žiak/žiačka (výber na úvodnej obrazovke) a plní úlohy od triednej. Popri tom rieši malú záhadu so stratenou knihou.
 - 6 mini hier v miestnostiach a rozhovory s vymyslenými NPC.
 - Hra je celá **v slovenčine**.
 - Hrá sa **na mobile** (na výšku) a ovláda sa **ťuknutím**: postava dôjde na miesto, kam si ťukol.
@@ -51,34 +51,39 @@ Hra pre študentov **Gymnázia J. C. Hronského vo Vrútkach**. Žiaci ju otvori
 
 Vychádza zo skice autora (`docs/assets/skica-chodby.jpg`). Skica **nie je presná** a autor ju bude ešte upravovať, takže mapa musí ísť ľahko zmeniť (pozri „Technické rozhodnutia“).
 
-Rozloženie zhora nadol. Široká chodba vedie po pravej strane celou dĺžkou a miestnosti sú vľavo:
+Rozloženie schválené autorom 2026-11-19 (úprava: `docs/assets/mapa-uprava.jpg`). Chodba má tvar „L/S“: ľavá zvislá časť → vodorovná časť so skrinkami → pravá zvislá časť dole. ★ = spawn hráča (pozerá doprava, zborovňa mu je po ľavici), ▯ = dvere.
 
 ```
-┌──────────────┬────────┐
-│ INFORMATIKA  │        │
-├──────────────┤        │
-│  TRIEDA 1    │        │
-├──────────────┤        │
-│ [skrinky]    │   C    │
-│              │   H    │
-├──────────────┤   O    │
-│ WC   │  WC   │   D    │
-├──────┴───────┤   B    │
-│ KABINET │ WC │   A    │
-├──────────────┤        │
-│  TRIEDA 2    │ [vitrína]
-├──────────────┤ [portrét]
-│  TRIEDA 3    │        │
-├──────────────┤        │
-│  TRIEDA 4    │        │
-├──────────────┤        │
-│ ZBOROVŇA*    │        │
-└──────────────┴────────┘
+        ┌────┐
+        │    ├─────────────┐
+        │ C  ▯ INFORMATIKA │
+        │ H  ├─────────────┤
+ ┌──────┤ O  ▯  TRIEDA 1   │
+ │ZBOR- │ D  ├─────────────┘
+ │ OVŇA │ B  │   (stena)
+ └──▯───┘ A  └─────────────────┐
+   ★     [skrinky]  CHODBA →   │
+ └───────────┬───▯──┬────┐     │
+             │  WC  │ WC ▯  C  │
+             ├──────┴────┤  H  │
+             │  KABINET  ▯  O  │
+             ├───────────┤  D  │
+             │ TRIEDA 2  ▯  B  │
+             ├───────────┤  A  │
+             │ TRIEDA 3  ▯     │
+             ├───────────┤  ↓  │
+             │ TRIEDA 4  ▯     │
+             └───────────┴─────┘
 ```
 
-\* Spodná miestnosť je na skici bez popisu. Zborovňa je **návrh**, autor to potvrdí alebo zmení.
+- Pod Triedou 1 nie je nič (stena/plné miesto).
+- Zborovňa je vľavo od ľavej chodby, dvere dole do vodorovnej chodby.
+- Ľavé WC: dvere zhora z vodorovnej chodby. Pravé WC, kabinet, Triedy 2–4: dvere do pravej chodby.
+- Skrinky sú na hornej stene vodorovnej chodby.
+- Vitrína a portrét Hronského: v pravej chodbe oproti Triede 2.
+- Malé WC pri kabinete zo skice je zrušené.
 
-- Každá miestnosť má dvere do chodby. Po ťuknutí na dvere postava dôjde k nim a vstúpi.
+- Po ťuknutí na dvere postava dôjde k nim a vstúpi.
 - Interiér miestnosti je samostatná malá mapa (lavice, tabuľa, police…), z ktorej sa ťuknutím na dvere vracia na chodbu.
 - Chodba je dlhšia ako displej, preto kamera sleduje hráča.
 
@@ -117,6 +122,7 @@ Rozloženie zhora nadol. Široká chodba vedie po pravej strane celou dĺžkou a
 
 Všetky sú vymyslené, s vymyslenými menami, a žiadna nesmie pripomínať skutočného človeka.
 
+- **Hráč:** chlapec alebo dievča podľa výberu. Dve postavy; texty s variantmi podľa rodu (napr. zápis `{prišiel|prišla}`), voľba sa ukladá.
 - **Triedna:** zadáva úlohy a na konci chváli.
 - **Školník:** pri skrinkách, trochu mrzutý, ale dobrák.
 - **Upratovačka:** pri WC, kľúčová postava rozuzlenia.
@@ -150,7 +156,7 @@ Asi 5 skrytých vecí na ťuknutie, napríklad portrét Hronského, zabudnutý d
 - Pixel art, jednoduchý a štvorčekový, teplé farby ako vo „farm life“ hrách. Všetku grafiku kreslí ten, kto hru stavia.
 - Animácie: chôdza do 4 smerov, jemný pohyb NPC, prechody medzi scénami a efekt pri úspechu.
 - **Hudba a zvuky:** chiptune hudba na pozadí, zvuk krokov, ťuknutia, úspechu a otvorenia dverí. Tlačidlo na stlmenie je vždy viditeľné. Zvuk sa zapne až po prvom ťuknutí, lebo mobilné prehliadače inak zvuk blokujú.
-- **Obrazovky:** úvod (názov hry a „Ťukni a začni“), hra, mini hry, záver.
+- **Obrazovky:** úvod (názov „Prvý deň“, výber chlapec/dievča, „Ťukni a začni“), hra, mini hry, záver.
 - Texty musia byť na mobile čitateľné. Tlačidlá majú aspoň zhruba 44 px, čo je veľkosť pohodlná na prst.
 
 ## Uloženie postupu
@@ -187,6 +193,5 @@ Autor chce schvaľovať veľké kroky. Hra sa preto stavia po etapách a po kaž
 
 ## Otvorené (na autora)
 
-- Čo je spodná miestnosť? Zatiaľ je to zborovňa.
-- Neskoršie úpravy mapy podľa presnejšej skice.
+- Neskoršie úpravy mapy podľa reality.
 - Prípadná história gymnázia.

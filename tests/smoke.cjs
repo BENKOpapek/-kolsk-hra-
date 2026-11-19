@@ -27,6 +27,31 @@ const fail = (m) => { console.error('SMOKE FAIL:', m); process.exitCode = 1; };
       fail(`canvas ${box.width}x${box.height} vs viewport ${vp.width}x${vp.height}`);
 
 
+    // --- Chodba: pohyb ťuknutím, prerušenie, dvere ---
+    await page.waitForFunction(() => window.game.scene.isActive('Corridor'), null, { timeout: 5000 });
+    const corridor = (fn, arg) => page.evaluate(([f, a]) => new Function('s', 'a', 'return ' + f)(window.game.scene.getScene('Corridor'), a), [fn, arg]);
+    const tapTile = async (x, y) => {
+      const p = await corridor('(() => { const c = s.cameras.main, z = s.game.scale.zoom; return { x: (a.x*16+8 - c.worldView.x)*z, y: (a.y*16+8 - c.worldView.y)*z }; })()', { x, y });
+      const b = await page.locator('canvas').boundingBox();
+      await page.touchscreen.tap(b.x + p.x, b.y + p.y);
+    };
+    const waitTile = (x, y, ms = 3000) => page.waitForFunction(([x, y]) => {
+      const t = window.game.scene.getScene('Corridor').playerTile; return t.x === x && t.y === y;
+    }, [x, y], { timeout: ms }).then(() => true, () => false);
+
+    const start = await corridor('s.playerTile');
+    if (start.x !== 2 || start.y !== 16) fail('spawn nie je (2,16): ' + JSON.stringify(start));
+    await tapTile(6, 16);
+    if (!await waitTile(6, 16)) fail('hráč nedošiel na (6,16)');
+    await tapTile(19, 16);
+    await page.waitForTimeout(200);
+    await tapTile(2, 16);
+    if (!await waitTile(2, 16)) fail('prerušenie pohybu: hráč nedošiel späť na (2,16)');
+    await tapTile(3, 14);
+    const door = await page.waitForFunction(() => window.game.scene.getScene('Corridor').lastDoorId === 'zborovna', null, { timeout: 3000 }).then(() => true, () => false);
+    if (!door) fail('dvere zborovne sa neohlásili');
+    await page.screenshot({ path: path.join(__dirname, '..', 'docs', 'screens', 'etapa1.png') });
+
     await page.setViewportSize({ width: 360, height: 640 });
     await page.waitForTimeout(300);
     if (await page.evaluate(() => window.game.scale.zoom) !== 2) fail('zoom po resize nie je 2');

@@ -16,6 +16,8 @@ export class Corridor extends Phaser.Scene {
 
     this.playerTile = { ...this.grid.spawn };
     this.lastDoorId = null;
+    this.queue = [];
+    this.stepTo = null;
     const c = center(this.playerTile);
     this.skin = 'player_boy'; // výber chlapec/dievča príde v ďalšej etape
     this.facing = 'down';
@@ -65,24 +67,22 @@ export class Corridor extends Phaser.Scene {
   }
 
   onTap(tile) {
-    const r = resolveTap(this.grid, this.playerTile, tile);
+    // Počas kroku plánujeme od dlaždice, na ktorú postava práve kráča – krok sa dokončí, nič necúva.
+    const from = this.stepTo ?? this.playerTile;
+    const r = resolveTap(this.grid, from, tile);
     if (!r) return;
-    this.tweens.killTweensOf(this.player);
-    const c = center(this.playerTile);
-    c.y -= FEET;
-    // Prerušený krok: najprv sa vráť na stred poslednej dlaždice.
-    const path = (this.player.x !== c.x || this.player.y !== c.y) ? [{ ...this.playerTile }, ...r.path] : r.path;
+    this.queue = r.path;
     this.targetDoor = r.door;
     this.marker?.destroy();
-    const goal = r.path.at(-1) ?? this.playerTile;
-    const m = center(goal);
+    const m = center(r.path.at(-1) ?? from);
     this.marker = this.add.circle(m.x, m.y, 3, 0xffffff, 0.6).setDepth(5);
-    this.walk(path);
+    if (!this.stepTo) this.walk();
   }
 
-  walk(path) {
-    if (!path.length) return this.arrive();
-    const next = path.shift();
+  walk() {
+    const next = this.queue.shift();
+    if (!next) { this.stepTo = null; return this.arrive(); }
+    this.stepTo = next;
     const c = center(next);
     c.y -= FEET;
     const dx = Math.sign(c.x - this.player.x), dy = Math.sign(c.y - this.player.y);
@@ -93,7 +93,7 @@ export class Corridor extends Phaser.Scene {
     }
     this.tweens.add({
       targets: this.player, x: c.x, y: c.y, duration: STEP_MS,
-      onComplete: () => { this.playerTile = next; this.walk(path); },
+      onComplete: () => { this.playerTile = next; this.walk(); },
     });
   }
 

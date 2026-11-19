@@ -35,6 +35,8 @@ const fail = (m) => { console.error('SMOKE FAIL:', m); process.exitCode = 1; };
       const b = await page.locator('canvas').boundingBox();
       await page.touchscreen.tap(b.x + p.x, b.y + p.y);
     };
+    // Pri pohybe kamera „pláva“, preto zmenu cieľa testujeme priamo cez onTap (dotyk overujú ostatné kroky).
+    const goTile = (x, y) => corridor('s.onTap(a)', { x, y });
     const waitTile = (x, y, ms = 3000) => page.waitForFunction(([x, y]) => {
       const t = window.game.scene.getScene('Corridor').playerTile; return t.x === x && t.y === y;
     }, [x, y], { timeout: ms }).then(() => true, () => false);
@@ -43,10 +45,29 @@ const fail = (m) => { console.error('SMOKE FAIL:', m); process.exitCode = 1; };
     if (start.x !== 2 || start.y !== 16) fail('spawn nie je (2,16): ' + JSON.stringify(start));
     await tapTile(6, 16);
     if (!await waitTile(6, 16)) fail('hráč nedošiel na (6,16)');
-    await tapTile(19, 16);
+    await goTile(19, 16);
     await page.waitForTimeout(200);
-    await tapTile(2, 16);
+    await goTile(2, 16);
     if (!await waitTile(2, 16)) fail('prerušenie pohybu: hráč nedošiel späť na (2,16)');
+    // Zmena cieľa počas kroku: postava nesmie cúvnuť.
+    await page.evaluate(() => {
+      const s = window.game.scene.getScene('Corridor');
+      window.__xs = []; s.events.on('postupdate', () => window.__xs.push(s.player.x));
+    });
+    await goTile(8, 16);
+    await page.waitForTimeout(190);
+    await goTile(14, 16);
+    if (!await waitTile(14, 16)) fail('retarget: hráč nedošiel na (14,16)');
+    const xs = await page.evaluate(() => window.__xs);
+    if (xs.some((x, i) => i && x < xs[i - 1])) fail('retarget: hráč cúvol (x klesla)');
+    // Rýchle opakované ťukanie nesmie postavu zmraziť.
+    await goTile(2, 16);
+    if (!await waitTile(2, 16)) fail('návrat na (2,16) zlyhal');
+    for (let i = 0; i < 20; i++) { await goTile(19, 16); await page.waitForTimeout(80); }
+    if ((await corridor('s.playerTile')).x < 12) fail('rýchle ťukanie zmrazilo hráča');
+    await goTile(2, 16);
+    if (!await waitTile(2, 16, 4000)) fail('návrat na (2,16) zlyhal');
+
     await tapTile(3, 14);
     const door = await page.waitForFunction(() => window.game.scene.getScene('Corridor').lastDoorId === 'zborovna', null, { timeout: 3000 }).then(() => true, () => false);
     if (!door) fail('dvere zborovne sa neohlásili');
